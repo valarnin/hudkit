@@ -10,63 +10,58 @@
    * Updated to WebKit 2 by Antti Korpi <an@cyan.io> on December 12, 2017.
  */
 
-// Library include           // What it's used for
-// --------------------------//-------------------
-#include <gtk/gtk.h>         // windowing
-#include <webkit2/webkit2.h> // web view
-#include <stdlib.h>          // exit
-#include <stdio.h>           // files
+#include <signal.h>
+#include <stdlib.h>
+#include <string.h>
+#include <libgen.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <webkit2/webkit2.h>
 
-static void screen_changed(GtkWidget *widget, GdkScreen *old_screen,
-        gpointer user_data);
+//@TODO: Make this a c++ app and do things in a better manner.
+//Until then, here's some jank to make managing this a bit easier.
+#include "config.c"
+#include "gtk.c"
+#include "webkit.c"
+#include "hotkey.c"
 
-static int get_monitor_rects(GdkDisplay *display, GdkRectangle **rectangles) {
-    int n = gdk_display_get_n_monitors(display);
-    GdkRectangle *new_rectangles = (GdkRectangle*)malloc(n * sizeof(GdkRectangle));
-    for (int i = 0; i < n; ++i) {
-        GdkMonitor *monitor = gdk_display_get_monitor(display, i);
-        gdk_monitor_get_geometry(monitor, &new_rectangles[i]);
-    }
-    *rectangles = new_rectangles;
-    return n;
-}
-
-static void web_view_javascript_finished(GObject *object, GAsyncResult *result,
-        gpointer user_data) {
-    WebKitJavascriptResult *js_result;
-    JSValueRef value;
-    JSGlobalContextRef context;
-    GError *error = NULL;
-
-    js_result = webkit_web_view_run_javascript_finish(WEBKIT_WEB_VIEW(object), result, &error);
-    if (!js_result) {
-        g_warning("Error running JavaScript: %s", error->message);
-        g_error_free(error);
-        return;
-    }
-    webkit_javascript_result_unref(js_result);
+void int_handler(int s) {
+    handle_gtk_quit();
 }
 
 int main(int argc, char **argv) {
     gtk_init(&argc, &argv);
     if (argc < 2) {
         fprintf(stderr, "Expected 1 argument, got 0:\n");
-        fprintf(stderr, "You should pass a running web server's URI.\n\n");
-        fprintf(stderr, "For example, start a server on port 4000, then\n\n");
-        fprintf(stderr, "    %s \"http://localhost:4000\"\n\n", argv[0]);
+        fprintf(stderr, "You should pass a json config file path.\n\n");
+        fprintf(stderr, "For example,\n");
+        fprintf(stderr, "    %s \"config.json\"\n\n", argv[0]);
         exit(1);
     }
 
+    read_config(argv[1]);
+
+    struct sigaction intHandler;
+    intHandler.sa_handler = int_handler;
+    sigemptyset(&intHandler.sa_mask);
+    intHandler.sa_flags=0;
+    sigaction(SIGINT, &intHandler, NULL);
+
     // Create the window, set basic properties
-    GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
-    gtk_window_set_title(GTK_WINDOW(window), "hudkit overlay window");
-    g_signal_connect(G_OBJECT(window), "delete-event", gtk_main_quit, NULL);
+    gtk_window_set_title(GTK_WINDOW(window), title);
+    gtk_widget_add_events(GTK_WIDGET(window), GDK_CONFIGURE);
+    g_signal_connect(G_OBJECT(window), "delete-event", G_CALLBACK(handle_gtk_quit), NULL);
     gtk_widget_set_app_paintable(window, TRUE);
 
     // Set up a callback to react to screen changes
     g_signal_connect(G_OBJECT(window), "screen-changed",
             G_CALLBACK(screen_changed), NULL);
+
+    // Set up a callback to handle resize/move events
+    g_signal_connect(G_OBJECT(window), "configure-event",
+        G_CALLBACK(configure_callback), NULL);
 
     // Set up and add the WebKit web view widget
     // Disable caching
@@ -83,39 +78,11 @@ int main(int argc, char **argv) {
     gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(web_view));
 
     // Load the specified URI
-    webkit_web_view_load_uri(web_view, argv[1]);
+    webkit_web_view_load_uri(web_view, url);
 
     // Initialise the window and make it active.  We need this so it can
     // fullscreen to the correct size.
     screen_changed(window, NULL, NULL);
-
-    GdkDisplay *display = gdk_display_get_default();
-    GdkRectangle *rectangles = NULL;
-    int nRectangles = get_monitor_rects(display, &rectangles);
-
-    // snprintf-ing and then strncat-ing strings safely in C is hard, and it's
-    // 3am, so let's write to a temporary file and read the result back.
-    char filename[] = "/tmp/hudkit_js_init_XXXXXX";
-    int fd = mkstemp(filename);
-    FILE *fp = fdopen(fd, "w+");
-    if (fp == NULL) {
-        fprintf(stderr, "Error opening temp file\n");
-        exit(1);
-    }
-    fprintf(fp, "window.Hudkit = {monitors:[");
-    for (int i = 0; i < nRectangles; ++i) {
-        GdkRectangle rect = rectangles[i];
-        fprintf(fp, "{x:%i,y:%i,width:%i,height:%i},\n", rect.x, rect.y, rect.width, rect.height);
-    }
-    fprintf(fp, "]};");
-    fseek(fp, 0, SEEK_SET);
-
-    char buffer[1000];
-    int nRead = fread(buffer, 1, 1000, fp);
-    buffer[nRead] = '\0';
-    fclose(fp);
-
-    webkit_web_view_run_javascript(web_view, buffer, NULL, web_view_javascript_finished, NULL);
 
     gtk_widget_show_all(window);
 
@@ -171,63 +138,9 @@ int main(int argc, char **argv) {
     //  - doing `gdk_x11_grab_server` and `gdk_x11_ungrab_server` around
     //    various large and small bits of code, and
     //  - forcing full composition pipeline in `nvidia-settings`.
+    register_hotkey();
     usleep(200000);
-
+    
     gtk_main();
     return 0;
-}
-
-static void size_to_screen(GtkWindow *window) {
-    GdkScreen *screen = gtk_widget_get_screen(GTK_WIDGET(window));
-
-    // Get total screen size.  This involves finding all physical monitors
-    // connected, and examining their positions and sizes.  This is as complex
-    // as it is because monitors can be configured to have relative
-    // positioning, causing overlapping areas and a non-rectangular total
-    // desktop area.
-    //
-    // We want our window to cover the minimum axis-aligned bounding box of
-    // that total desktop area.  This means it's too large (even large bits of
-    // it may be outside the accessible desktop) but it's easier to manage than
-    // multiple windows.
-
-    // TODO Find the min x and y too, just in case someone's weird setup
-    // has something other than 0,0 as top-left.
-
-    GdkDisplay *display = gdk_display_get_default();
-    GdkRectangle *rectangles = NULL;
-    int nRectangles = get_monitor_rects(display, &rectangles);
-
-    int width = 0, height = 0;
-    for (int i = 0; i < nRectangles; ++i) {
-        GdkRectangle rect = rectangles[i];
-        int actualWidth = rect.x + rect.width;
-        int actualHeight = rect.y + rect.height;
-        if (width < actualWidth) width = actualWidth;
-        if (height < actualHeight) height = actualHeight;
-    }
-    free(rectangles);
-
-    gtk_window_set_default_size(window, width, height);
-    gtk_window_resize(window, width, height);
-    gtk_window_set_resizable(window, false);
-}
-
-// This callback runs when the window is first set to appear on some screen, or
-// when it's moved to appear on another.
-static void screen_changed(GtkWidget *widget, GdkScreen *old_screen,
-        gpointer userdata) {
-
-    // Die unless the screen supports compositing (alpha blending)
-    GdkScreen *screen = gtk_widget_get_screen(widget);
-    if (!gdk_screen_is_composited(screen)) {
-        fprintf(stderr, "Your screen does not support transparency.\n");
-        fprintf(stderr, "Maybe your compositor isn't running?\n");
-        exit(2);
-    }
-
-    // Ensure the widget (the window, actually) can take RGBA
-    gtk_widget_set_visual(widget, gdk_screen_get_rgba_visual(screen));
-
-    size_to_screen(GTK_WINDOW(widget));
 }

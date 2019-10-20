@@ -1,1 +1,3 @@
 hudkit
+*.json
+.vscode
