@@ -1,5 +1,52 @@
 # Hudkit
 
+This is a fork of [hudkit by anko](https://github.com/anko/) intended for use with ngld's OverlayPlugin for ACT. The original readme is below until this can be updated properly.
+
+## Usage
+
+1. Clone repo and compile
+```bash
+cd /tmp
+git clone https://github.com/valarnin/hudkit.git
+cd hudkit
+make
+```
+2. Let hudkit create a template json file for you
+```bash
+./hudkit example.json
+```
+3. Edit `example.json` with your preferred text editor. Here's the default template with comments:
+```javascript
+{
+    "title":"example overlay", //Title of the window, to make it easier to identify
+    "url":"file:///path/to/file.html?OVERLAY_WS=ws://127.0.0.1:10501/ws", //URL to the overlay
+    "x":100, // X position to display overlay at
+    "y":100, // Y position to display overlay at
+    "width":200, // Width of overlay
+    "height":200, // Height of overlay
+    "hotkey":"<Ctrl>L" // Hotkey to lock/unlock the overlay
+}
+```
+4. Run the overlay
+```bash
+./hudkit example.json
+```
+5. Unlock the overlay with the hotkey from the config file (`Ctrl+L` by default), reposition/resize, and re-lock the overlay with the same hotkey. This will update `example.json` with the new x/y/width/height values.
+
+## Known issues
+
+- Size on launch might still be messed up in some edge cases. I think this is good but needs more testing.
+- When the overlay is unlocked, it tends to lose its "always-on-top" flag. If that happens, click the "window is ready" notification to get back focus and move it to the top. When the overlay is re-locked, the flag seems to be fine so not sure exactly what's going on with it.
+- This is written in C. I'd really like to move it to C++ with some proper class support etc.
+
+# Original Readme
+
+---
+---
+---
+
+# Hudkit
+
 A web-based [Head-Up Display][wiki-hud] for your desktop, using the [WebKit][webkit] browser engine.
 
 Hudkit lets you use web technologies (HTML, CSS, JavaScript, WebSockets, etc.) to draw and animate anything on a *click-through transparent fullscreen layer over your desktop*.  You know, like military planes have!  Except on your monitor(s)!  As a chromeless web browser!
