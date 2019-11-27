@@ -49,7 +49,9 @@ int main(int argc, char **argv) {
 
     // Create the window, set basic properties
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
+    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_NONE);
+    gtk_window_set_default_size(GTK_WINDOW(window), width, height);
+    gtk_window_move(GTK_WINDOW(window), x, y);
     gtk_window_set_title(GTK_WINDOW(window), title);
     gtk_widget_add_events(GTK_WIDGET(window), GDK_CONFIGURE);
     g_signal_connect(G_OBJECT(window), "delete-event", G_CALLBACK(handle_gtk_quit), NULL);
