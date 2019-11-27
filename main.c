@@ -69,6 +69,8 @@ int main(int argc, char **argv) {
     // Disable caching
     WebKitWebContext *wk_context = webkit_web_context_get_default();
     webkit_web_context_set_cache_model(wk_context, WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
+    WebKitSecurityManager *security_manager = webkit_web_context_get_security_manager(wk_context);
+    webkit_security_manager_register_uri_scheme_as_secure(security_manager, "ws");
     WebKitWebView *web_view = WEBKIT_WEB_VIEW(webkit_web_view_new_with_context(wk_context));
     // Enable browser console logging to stdout
     WebKitSettings *wk_settings = webkit_settings_new();
