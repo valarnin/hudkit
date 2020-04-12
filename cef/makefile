@@ -1,0 +1,25 @@
+hudkit: main.cc
+	@mkdir -p build
+	clang++ \
+		main.cc \
+		hudkit.cc \
+		browser_handler.cc \
+		hudkit_window.cc \
+		render_handler.cc \
+		draw.cc \
+		-o build/hudkit \
+		-isystem ./cef-project \
+		-Wl,-rpath,. \
+		-I./cef-project \
+		-L./cef-project/build/libcef_dll_wrapper \
+		-L./cef-project/Release \
+		`pkg-config --cflags --libs json-c keybinder-3.0 x11 gtkmm-3.0 gdkmm-3.0 cairomm-1.0 glibmm-2.4` \
+		-lcef_dll_wrapper \
+		-lcef
+	#cp -r cef-project/Release/*.so build/
+	#cp -r cef-project/Release/*.bin build/
+	#cp -r cef-project/Release/swiftshader build/
+	#cp -r cef-project/Resources/* build/
+
+clean:
+	rm -rf build

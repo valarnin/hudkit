@@ -1,3 +1,5 @@
 hudkit
 *.json
 .vscode
+cef/cef-project
+build

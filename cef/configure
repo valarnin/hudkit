@@ -1,0 +1,16 @@
+#!/bin/bash
+
+CEF_BUILD='cef_binary_81.2.15+ge07275d+chromium-81.0.4044.92_linux64'
+
+if [[ ! -e 'cef-project/build' ]]; then
+    mkdir 'cef-project' &> /dev/null
+    curl -ocef-project/tmp.tar.bz2 "http://opensource.spotify.com/cefbuilds/${CEF_BUILD}.tar.bz2" &> /dev/null
+    cd cef-project
+    tar xf tmp.tar.bz2
+    mv "${CEF_BUILD}/*" ./
+    rmdir "${CEF_BUILD}"
+    mkdir build
+    cd build
+    cmake ..
+    make
+fi
