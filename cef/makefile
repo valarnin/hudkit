@@ -16,10 +16,10 @@ hudkit: main.cc
 		`pkg-config --cflags --libs json-c keybinder-3.0 x11 gtkmm-3.0 gdkmm-3.0 cairomm-1.0 glibmm-2.4` \
 		-lcef_dll_wrapper \
 		-lcef
-	#cp -r cef-project/Release/*.so build/
-	#cp -r cef-project/Release/*.bin build/
-	#cp -r cef-project/Release/swiftshader build/
-	#cp -r cef-project/Resources/* build/
+	cp -r cef-project/Release/*.so build/
+	cp -r cef-project/Release/*.bin build/
+	cp -r cef-project/Release/swiftshader build/
+	cp -r cef-project/Resources/* build/
 
 clean:
 	rm -rf build
