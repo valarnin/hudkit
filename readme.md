@@ -8,7 +8,7 @@ This is a fork of [hudkit by anko](https://github.com/anko/) intended for use wi
 ```bash
 cd /tmp
 git clone https://github.com/valarnin/hudkit.git
-cd hudkit
+cd hudkit/webkit
 make
 ```
 2. Let hudkit create a template json file for you
