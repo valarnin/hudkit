@@ -10,7 +10,7 @@
 class HudkitRenderHandler : public CefRenderHandler
 {
 public:
-  HudkitRenderHandler(Glib::RefPtr<DrawArea> draw);
+  HudkitRenderHandler(DrawArea draw);
 
   void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect) OVERRIDE;
   void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList &dirtyRects, const void *buffer, int width, int height) OVERRIDE;
@@ -19,7 +19,7 @@ private:
   IMPLEMENT_REFCOUNTING(HudkitRenderHandler);
 
 protected:
-  Glib::RefPtr<DrawArea> draw;
+  DrawArea draw;
 };
 
 #endif

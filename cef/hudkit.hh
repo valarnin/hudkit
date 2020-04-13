@@ -22,11 +22,8 @@ public:
     virtual void OnContextInitialized() OVERRIDE;
     void Run();
 
-    bool __handler_tick(const Glib::RefPtr<Gdk::FrameClock> &clock);
-
 private:
-    Glib::RefPtr<Gtk::Application> gtkApp;
-    Glib::RefPtr<HudkitWindow> hudkitWindow;
+    HudkitWindow hudkitWindow;
 
     // Include the default reference counting implementation.
     IMPLEMENT_REFCOUNTING(Hudkit);

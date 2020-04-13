@@ -1,6 +1,8 @@
 #include "hudkit.hh"
 
+#include <gtk/gtk.h>
 #include <X11/Xlib.h>
+#include <csignal>
 
 namespace
 {
@@ -24,8 +26,23 @@ int XIOErrorHandlerImpl(Display *display)
 
 } // namespace
 
+int handle_gtk_quit() {
+    //write_config();
+    gtk_main_quit();
+    //unregister_hotkey();
+    return 0;
+}
+
+void int_handler(int s) {
+    handle_gtk_quit();
+    exit(s);
+}
+
 int main(int argc, char *argv[])
 {
+    signal(SIGINT, int_handler);
+    gtk_init(&argc, &argv);
+
     CefMainArgs main_args(argc, argv);
     int exit_code = CefExecuteProcess(main_args, nullptr, nullptr);
     if (exit_code >= 0)
@@ -42,9 +59,9 @@ int main(int argc, char *argv[])
 
     CefRefPtr<Hudkit> app(new Hudkit);
 
+    printf("Pre-Init\n");
     CefInitialize(main_args, settings, app.get(), nullptr);
-
-    app.get()->Run();
+    printf("Post-Init\n");
 
     CefShutdown();
 

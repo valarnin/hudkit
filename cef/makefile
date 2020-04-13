@@ -1,6 +1,6 @@
 hudkit: main.cc
 	@mkdir -p build
-	clang++ \
+	clang++ -g \
 		main.cc \
 		hudkit.cc \
 		browser_handler.cc \
@@ -13,7 +13,7 @@ hudkit: main.cc
 		-I./cef-project \
 		-L./cef-project/build/libcef_dll_wrapper \
 		-L./cef-project/Release \
-		`pkg-config --cflags --libs json-c keybinder-3.0 x11 gtkmm-3.0 gdkmm-3.0 cairomm-1.0 glibmm-2.4` \
+		`pkg-config --cflags --libs json-c keybinder-3.0 x11 gtk+-3.0` \
 		-lcef_dll_wrapper \
 		-lcef
 	cp -r cef-project/Release/*.so build/

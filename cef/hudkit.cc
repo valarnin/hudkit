@@ -12,8 +12,6 @@
 
 Hudkit::Hudkit()
 {
-  gtkApp = Gtk::Application::create();
-  hudkitWindow = Glib::RefPtr<HudkitWindow>(new HudkitWindow());
 }
 
 Hudkit::~Hudkit()
@@ -24,9 +22,11 @@ void Hudkit::OnContextInitialized()
 {
   CEF_REQUIRE_UI_THREAD();
 
+  hudkitWindow.Initialize();
+
   CefRefPtr<CefCommandLine> command_line = CefCommandLine::GetGlobalCommandLine();
 
-  CefRefPtr<BrowserHandler> handler(new BrowserHandler(false, new HudkitRenderHandler(hudkitWindow.get()->drawArea)));
+  CefRefPtr<BrowserHandler> handler(new BrowserHandler(false, new HudkitRenderHandler(hudkitWindow.drawArea)));
 
   CefBrowserSettings browser_settings;
 
@@ -40,24 +40,21 @@ void Hudkit::OnContextInitialized()
   CefWindowInfo window_info;
 
   window_info.windowless_rendering_enabled = true;
-  window_info.SetAsWindowless((unsigned long)hudkitWindow.get()->GetContainerWidget());
+  window_info.SetAsWindowless((unsigned long)hudkitWindow.widgetWindow);
 
   browser_settings.windowless_frame_rate = 60;
   //browser_settings.background_color = CefColorSetARGB(255, 0, 0, 0);
-  hudkitWindow.get()->add_tick_callback(sigc::mem_fun(*this, &Hudkit::__handler_tick));
 
   // Create the first browser window.
   CefRefPtr<CefClient> client(handler);
 
   CefRefPtr<CefBrowser> browser = CefBrowserHost::CreateBrowserSync(window_info, client, url, browser_settings, nullptr, nullptr);
-}
 
-bool Hudkit::__handler_tick(const Glib::RefPtr<Gdk::FrameClock> &clock) {
-  CefDoMessageLoopWork();
-  return true;
+  Run();
 }
 
 void Hudkit::Run()
 {
-  gtkApp.get()->run(*hudkitWindow.get());
+  hudkitWindow.Run();
+  hudkitWindow.Close();
 }
