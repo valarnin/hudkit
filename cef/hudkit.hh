@@ -8,7 +8,7 @@
 class Hudkit : public CefApp, public CefBrowserProcessHandler
 {
 public:
-    Hudkit();
+    Hudkit(HudkitConfig &config);
     virtual ~Hudkit();
 
     // CefApp methods:
@@ -23,6 +23,7 @@ public:
     void Run();
 
 private:
+    HudkitConfig &config;
     HudkitWindow hudkitWindow;
 
     // Include the default reference counting implementation.

@@ -1,8 +1,10 @@
 #include "hudkit.hh"
+#include "hudkit_config.hh"
 
 #include <gtk/gtk.h>
 #include <X11/Xlib.h>
 #include <csignal>
+#include <iostream>
 
 namespace
 {
@@ -26,42 +28,65 @@ int XIOErrorHandlerImpl(Display *display)
 
 } // namespace
 
-int handle_gtk_quit() {
+int handle_gtk_quit()
+{
     //write_config();
     gtk_main_quit();
     //unregister_hotkey();
     return 0;
 }
 
-void int_handler(int s) {
+void int_handler(int s)
+{
     handle_gtk_quit();
     exit(s);
 }
 
 int main(int argc, char *argv[])
 {
-    signal(SIGINT, int_handler);
-    gtk_init(&argc, &argv);
-
     CefMainArgs main_args(argc, argv);
     int exit_code = CefExecuteProcess(main_args, nullptr, nullptr);
     if (exit_code >= 0)
     {
         return exit_code;
     }
+
+    if (argc < 2)
+    {
+        std::cerr << "Expected 1 argument, got 0:" << std::endl
+                  << "You should pass a json config file path." << std::endl
+                  << std::endl
+                  << "For example," << std::endl
+                  << "    " << argv[0] << " \"config.json\"" << std::endl
+                  << std::endl;
+        exit(1);
+    }
+
+    std::string file(argv[1]);
+
+    HudkitConfig config(file);
+
+    signal(SIGINT, int_handler);
+    gtk_init(&argc, &argv);
+
     XSetErrorHandler(XErrorHandlerImpl);
     XSetIOErrorHandler(XIOErrorHandlerImpl);
 
     CefSettings settings;
 
+    //settings.multi_threaded_message_loop = true;
     settings.no_sandbox = true;
     settings.windowless_rendering_enabled = true;
 
-    CefRefPtr<Hudkit> app(new Hudkit);
+    Hudkit *hudkit = new Hudkit(config);
 
-    printf("Pre-Init\n");
+    CefRefPtr<Hudkit> app(hudkit);
+
     CefInitialize(main_args, settings, app.get(), nullptr);
-    printf("Post-Init\n");
+
+    usleep(200000);
+
+    app.get()->Run();
 
     CefShutdown();
 

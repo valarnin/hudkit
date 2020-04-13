@@ -4,27 +4,29 @@
 #include <cstdlib>
 
 DrawArea::DrawArea() : texture(NULL)
-{}
+{
+}
 DrawArea::~DrawArea() {}
 
 void DrawArea::update_texture(const void *texture, int width, int height)
 {
-    printf("update0\n");
     //Skip this frame, screen size changed between frames?
     if (width != this->width || height != this->height)
     {
-        printf("update1\n");
         return;
     }
-    printf("update2\n");
+
     memcpy(this->texture, texture, width * height * 4);
+
+    gtk_widget_queue_draw(drawingArea);
 }
 
 void DrawArea::SetSize(int width, int height)
 {
     if (width != this->width || height != this->height)
     {
-        if(this->texture != NULL) {
+        if (this->texture != NULL)
+        {
             free(this->texture);
         }
         this->texture = malloc(width * height * 4);
@@ -34,13 +36,15 @@ void DrawArea::SetSize(int width, int height)
         {
             //@TODO: Uhh, should probably free pixbuf but no clue how?
         }
-        this->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, true, 8, width, height);
+        this->pixbuf = gdk_pixbuf_new_from_data((const guchar*)this->texture, GDK_COLORSPACE_RGB, true, 8, width, height, width*4, NULL, NULL);
     }
 }
 
 void DrawArea::Register(GtkContainer *container)
 {
     drawingArea = gtk_drawing_area_new();
+    gtk_widget_set_hexpand(drawingArea, true);
+    gtk_widget_set_vexpand(drawingArea, true);
     gtk_container_add(GTK_CONTAINER(container), drawingArea);
     g_signal_connect(G_OBJECT(drawingArea), "draw",
                      G_CALLBACK(&DrawArea::draw_callback), (void *)(this));
@@ -64,8 +68,6 @@ gboolean DrawArea::draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data)
 
     const int width = allocation.width;
     const int height = allocation.height;
-
-    printf("hit draw 2, %u, %u\n", width, height);
 
     gdk_cairo_set_source_pixbuf(cr, instance->pixbuf, 0, 0);
 

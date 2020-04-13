@@ -9,8 +9,9 @@
 #include "include/wrapper/cef_helpers.h"
 #include "browser_handler.hh"
 #include "draw.hh"
+#include "hudkit_config.hh"
 
-Hudkit::Hudkit()
+Hudkit::Hudkit(HudkitConfig &config) : config(config), hudkitWindow(config)
 {
 }
 
@@ -30,17 +31,11 @@ void Hudkit::OnContextInitialized()
 
   CefBrowserSettings browser_settings;
 
-  std::string url;
-
-  url = command_line->GetSwitchValue("url");
-  if (url.empty())
-    url = "data:text/html;base64,PGh0bWw+PGJvZHkgc3R5bGU9ImJhY2tncm91bmQtY29sb3I6dHJhbnNwYXJlbnQ7Y29sb3I6d2hpdGUiPjxoMT5UZXN0aW5nIGh1ZGtpdDwvaDE+PC9ib2R5PjwvaHRtbD4=";
-
   // Information used when creating the native window.
   CefWindowInfo window_info;
 
   window_info.windowless_rendering_enabled = true;
-  window_info.SetAsWindowless((unsigned long)hudkitWindow.widgetWindow);
+  window_info.SetAsWindowless(0);
 
   browser_settings.windowless_frame_rate = 60;
   //browser_settings.background_color = CefColorSetARGB(255, 0, 0, 0);
@@ -48,9 +43,7 @@ void Hudkit::OnContextInitialized()
   // Create the first browser window.
   CefRefPtr<CefClient> client(handler);
 
-  CefRefPtr<CefBrowser> browser = CefBrowserHost::CreateBrowserSync(window_info, client, url, browser_settings, nullptr, nullptr);
-
-  Run();
+  CefRefPtr<CefBrowser> browser = CefBrowserHost::CreateBrowserSync(window_info, client, config.GetURL(), browser_settings, nullptr, nullptr);
 }
 
 void Hudkit::Run()

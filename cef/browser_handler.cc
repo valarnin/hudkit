@@ -44,25 +44,6 @@ BrowserHandler* BrowserHandler::GetInstance() {
   return g_instance;
 }
 
-void BrowserHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
-                                  const CefString& title) {
-  CEF_REQUIRE_UI_THREAD();
-
-  if (use_views_) {
-    // Set the title of the window using the Views framework.
-    CefRefPtr<CefBrowserView> browser_view =
-        CefBrowserView::GetForBrowser(browser);
-    if (browser_view) {
-      CefRefPtr<CefWindow> window = browser_view->GetWindow();
-      if (window)
-        window->SetTitle(title);
-    }
-  } else {
-    // Set the title of the window using platform APIs.
-    PlatformTitleChange(browser, title);
-  }
-}
-
 void BrowserHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   CEF_REQUIRE_UI_THREAD();
 
@@ -139,28 +120,4 @@ void BrowserHandler::CloseAllBrowsers(bool force_close) {
   BrowserList::const_iterator it = browser_list_.begin();
   for (; it != browser_list_.end(); ++it)
     (*it)->GetHost()->CloseBrowser(force_close);
-}
-
-void BrowserHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser,
-                                        const CefString& title) {
-  std::string titleStr(title);
-
-  ::Display* display = cef_get_xdisplay();
-  DCHECK(display);
-
-  ::Window window = browser->GetHost()->GetWindowHandle();
-  DCHECK(window != kNullWindowHandle);
-
-  const char* kAtoms[] = {"_NET_WM_NAME", "UTF8_STRING"};
-  Atom atoms[2];
-  int result = XInternAtoms(display, const_cast<char**>(kAtoms), 2, false, atoms);
-  if (!result) {
-    NOTREACHED();
-  }
-
-  XChangeProperty(display, window, atoms[0], atoms[1], 8, PropModeReplace,
-                  reinterpret_cast<const unsigned char*>(titleStr.c_str()),
-                  titleStr.size());
-
-  XStoreName(display, browser->GetHost()->GetWindowHandle(), titleStr.c_str());
 }

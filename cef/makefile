@@ -7,6 +7,7 @@ hudkit: main.cc
 		hudkit_window.cc \
 		render_handler.cc \
 		draw.cc \
+		hudkit_config.cc \
 		-o build/hudkit \
 		-isystem ./cef-project \
 		-Wl,-rpath,. \
@@ -15,7 +16,8 @@ hudkit: main.cc
 		-L./cef-project/Release \
 		`pkg-config --cflags --libs json-c keybinder-3.0 x11 gtk+-3.0` \
 		-lcef_dll_wrapper \
-		-lcef
+		-lcef \
+		-std=c++17
 	cp -r cef-project/Release/*.so build/
 	cp -r cef-project/Release/*.bin build/
 	cp -r cef-project/Release/swiftshader build/

@@ -30,8 +30,6 @@ class BrowserHandler : public CefClient, public CefDisplayHandler, public CefLif
     return m_renderHandler;
   }
 
-  virtual void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title) OVERRIDE;
-
   virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
   virtual bool DoClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
   virtual void OnBeforeClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
@@ -47,8 +45,6 @@ class BrowserHandler : public CefClient, public CefDisplayHandler, public CefLif
   bool IsClosing() const { return is_closing_; }
 
  private:
-  void PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title);
-
   const bool use_views_;
 
   typedef std::list<CefRefPtr<CefBrowser>> BrowserList;
