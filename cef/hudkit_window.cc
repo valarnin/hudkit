@@ -90,11 +90,10 @@ void HudkitWindow::Run()
             resizePending = false;
         }
 
-        if (movePending)
-        {
-            Move();
-            movePending = false;
-        }
+        Move();
+
+        gtk_window_set_keep_above(gtkWindow, true);
+        gtk_window_present(gtkWindow);
 
         gtk_main_iteration_do(false);
         CefDoMessageLoopWork();
@@ -123,7 +122,7 @@ void HudkitWindow::DrawWindow()
 
 void HudkitWindow::Resize()
 {
-    fprintf(stdout, "Resizing window to %i,%i.\n", config.GetWidth(), config.GetHeight());
+    //fprintf(stdout, "Resizing window to %i,%i.\n", config.GetWidth(), config.GetHeight());
     gtk_window_resize(gtkWindow, config.GetWidth(), config.GetHeight());
     drawArea.SetSize(config.GetWidth(), config.GetHeight());
 }
@@ -133,7 +132,7 @@ void HudkitWindow::Move()
     int x = config.GetX();
     int y = config.GetY();
 
-    fprintf(stdout, "Moving inner window frame to %i, %i.\n", x, y);
+    //fprintf(stdout, "Moving inner window frame to %i, %i.\n", x, y);
 
     gtk_window_move(gtkWindow, x, y);
 }
@@ -167,37 +166,40 @@ void HudkitWindow::__handle_hotkey(const char *keystring, void *data)
 
 void HudkitWindow::UpdateConfig()
 {
-    GtkAllocation allocation;
-    int x, y;
+    if (!lockedState)
+    {
+        GtkAllocation allocation;
+        int x, y;
 
-    gdk_window_get_origin(gdkWindow, &x, &y);
-    gtk_widget_get_allocation(widgetWindow, &allocation);
+        gdk_window_get_origin(gdkWindow, &x, &y);
+        gtk_widget_get_allocation(widgetWindow, &allocation);
 
-    int w = allocation.width;
-    int h = allocation.height;
-    if (config.GetX() != x)
-    {
-        config.SetX(x);
-    }
-    if (config.GetY() != y)
-    {
-        config.SetY(y);
-    }
+        int w = allocation.width;
+        int h = allocation.height;
+        if (config.GetX() != x)
+        {
+            config.SetX(x);
+        }
+        if (config.GetY() != y)
+        {
+            config.SetY(y);
+        }
 
-    bool resized = false;
-    if (config.GetWidth() != w)
-    {
-        config.SetWidth(w);
-        resized = true;
-    }
-    if (config.GetHeight() != h)
-    {
-        config.SetHeight(h);
-        resized = true;
-    }
-    if (resized)
-    {
-        drawArea.SetSize(config.GetWidth(), config.GetHeight());
+        bool resized = false;
+        if (config.GetWidth() != w)
+        {
+            config.SetWidth(w);
+            resized = true;
+        }
+        if (config.GetHeight() != h)
+        {
+            config.SetHeight(h);
+            resized = true;
+        }
+        if (resized)
+        {
+            drawArea.SetSize(config.GetWidth(), config.GetHeight());
+        }
     }
 }
 

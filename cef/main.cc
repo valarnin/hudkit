@@ -28,17 +28,13 @@ int XIOErrorHandlerImpl(Display *display)
 
 } // namespace
 
-int handle_gtk_quit()
-{
-    //write_config();
-    gtk_main_quit();
-    //unregister_hotkey();
-    return 0;
-}
+HudkitConfig* config;
 
 void int_handler(int s)
 {
-    handle_gtk_quit();
+    config->WriteConfig();
+    CefShutdown();
+    gtk_main_quit();
     exit(s);
 }
 
@@ -64,7 +60,7 @@ int main(int argc, char *argv[])
 
     std::string file(argv[1]);
 
-    HudkitConfig config(file);
+    HudkitConfig* config = new HudkitConfig(file);
 
     signal(SIGINT, int_handler);
     gtk_init(&argc, &argv);
@@ -74,11 +70,10 @@ int main(int argc, char *argv[])
 
     CefSettings settings;
 
-    //settings.multi_threaded_message_loop = true;
     settings.no_sandbox = true;
     settings.windowless_rendering_enabled = true;
 
-    Hudkit *hudkit = new Hudkit(config);
+    Hudkit *hudkit = new Hudkit(*config);
 
     CefRefPtr<Hudkit> app(hudkit);
 
