@@ -139,5 +139,6 @@ void HudkitConfig::WriteConfig()
     
     std::ofstream output(file);
     output << json;
+    output.flush();
     output.close();
 }

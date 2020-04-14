@@ -3,6 +3,7 @@
 
 #include "draw.hh"
 #include "hudkit_config.hh"
+#include "render_handler.hh"
 #include <chrono>
 
 class HudkitWindow {
@@ -17,7 +18,8 @@ public:
     void DisableMoveResize();
     void EnableMoveResize();
     GtkWidget* widgetWindow;
-    void UpdateDecorationSize();
+    void UpdateDecorationSize(), UpdateConfig();
+    HudkitRenderHandler* CEFRenderHandler;
 protected:
     bool resizePending = false, movePending = false;
     int decorationSizeTop, decorationSizeRight, decorationSizeBottom, decorationSizeLeft;
@@ -29,7 +31,6 @@ protected:
     std::chrono::nanoseconds frame_time;
     void DrawWindow();
     static void __handle_screen_changed(GtkWidget *widget, GdkScreen *old_screen, gpointer userdata);
-    static void __handle_configure_event(GtkWindow *window, GdkEvent *event, gpointer data);
     static void __handle_delete_event(GtkWidget *widget, GdkEvent *event, gpointer data);
     static void __handle_hotkey(const char* keystring, void* data);
     bool destroyed = true, lockedState = false, haveDecorationSizes = false;

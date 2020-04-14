@@ -4,8 +4,6 @@
 #include <gtk/gtk.h>
 #include <keybinder-3.0/keybinder.h>
 
-int handle_gtk_quit();
-
 HudkitWindow::HudkitWindow(HudkitConfig &config) : config(config)
 {
     frame_time = std::chrono::nanoseconds(1000000000 / fps);
@@ -75,9 +73,6 @@ void HudkitWindow::Run()
     g_signal_connect(G_OBJECT(gtkWindow), "screen-changed",
                      G_CALLBACK(&HudkitWindow::__handle_screen_changed), this);
 
-    g_signal_connect(G_OBJECT(gtkWindow), "configure-event",
-                     G_CALLBACK(&HudkitWindow::__handle_configure_event), this);
-
     gtk_main_iteration_do(true);
 
     destroyed = false;
@@ -87,6 +82,7 @@ void HudkitWindow::Run()
         auto frameStart = std::chrono::high_resolution_clock::now();
 
         UpdateDecorationSize();
+        UpdateConfig();
 
         if (resizePending)
         {
@@ -112,6 +108,8 @@ void HudkitWindow::Run()
             std::this_thread::sleep_for(frame_time - frameTime);
         }
     }
+
+    config.WriteConfig();
 }
 
 void HudkitWindow::Close()
@@ -155,76 +153,8 @@ void HudkitWindow::__handle_screen_changed(GtkWidget *widget, GdkScreen *old_scr
     gtk_widget_set_visual(widget, gdk_screen_get_rgba_visual(screen));
 }
 
-void HudkitWindow::__handle_configure_event(GtkWindow *window, GdkEvent *event, gpointer data)
-{
-    static int skippedEvents = 0;
-    static bool lastLockedState = false;
-    static bool firstAfterLock = false;
-
-    if (skippedEvents < 2)
-    {
-        ++skippedEvents;
-        return;
-    }
-
-    HudkitWindow *instance = (HudkitWindow *)data;
-
-    if (event->configure.send_event == 0)
-    {
-        if (lastLockedState != instance->lockedState)
-        {
-            lastLockedState = instance->lockedState;
-            if (instance->lockedState)
-            {
-                firstAfterLock = true;
-            }
-            return;
-        }
-        bool resize = false;
-
-        int x = event->configure.x;
-        int y = event->configure.y;
-        int w = event->configure.width;
-        int h = event->configure.height;
-
-        if (!firstAfterLock)
-        {
-            x += instance->decorationSizeLeft;
-            y += instance->decorationSizeTop;
-        }
-        firstAfterLock = false;
-
-        printf("config event, %i %i %i %i, %i %i, %i\n", x, y, w, h, event->configure.x, event->configure.y, instance->lockedState);
-
-        if (instance->config.GetX() != x)
-        {
-            instance->config.SetX(x);
-        }
-        if (instance->config.GetY() != y)
-        {
-            instance->config.SetY(y);
-        }
-        if (instance->config.GetWidth() != w)
-        {
-            instance->config.SetWidth(w);
-            resize = true;
-        }
-        if (instance->config.GetHeight() != h)
-        {
-            instance->config.SetHeight(h);
-            resize = true;
-        }
-
-        if (resize)
-        {
-            instance->resizePending = true;
-        }
-    }
-}
-
 void HudkitWindow::__handle_delete_event(GtkWidget *widget, GdkEvent *event, gpointer data)
 {
-    handle_gtk_quit();
     HudkitWindow *instance = (HudkitWindow *)data;
     instance->destroyed = true;
 }
@@ -233,6 +163,42 @@ void HudkitWindow::__handle_hotkey(const char *keystring, void *data)
 {
     HudkitWindow *instance = (HudkitWindow *)data;
     instance->ToggleMoveResize();
+}
+
+void HudkitWindow::UpdateConfig()
+{
+    GtkAllocation allocation;
+    int x, y;
+
+    gdk_window_get_origin(gdkWindow, &x, &y);
+    gtk_widget_get_allocation(widgetWindow, &allocation);
+
+    int w = allocation.width;
+    int h = allocation.height;
+    if (config.GetX() != x)
+    {
+        config.SetX(x);
+    }
+    if (config.GetY() != y)
+    {
+        config.SetY(y);
+    }
+
+    bool resized = false;
+    if (config.GetWidth() != w)
+    {
+        config.SetWidth(w);
+        resized = true;
+    }
+    if (config.GetHeight() != h)
+    {
+        config.SetHeight(h);
+        resized = true;
+    }
+    if (resized)
+    {
+        drawArea.SetSize(config.GetWidth(), config.GetHeight());
+    }
 }
 
 void HudkitWindow::UpdateDecorationSize()
@@ -273,20 +239,12 @@ void HudkitWindow::EnableMoveResize()
 {
     if (lockedState)
     {
-        int hx, hy, hw, hh;
-
-        gtk_window_get_position(gtkWindow, &hx, &hy);
-        gtk_window_get_size(gtkWindow, &hw, &hh);
-
         gdk_window_hide(gdkWindow);
         gtk_window_set_keep_above(gtkWindow, true);
-        gdk_window_set_override_redirect(gdkWindow, false);
         gtk_window_set_decorated(gtkWindow, true);
         gtk_window_set_accept_focus(gtkWindow, true);
         gtk_window_set_resizable(gtkWindow, true);
         gdk_window_show(gdkWindow);
-
-        movePending = true;
 
         gdk_window_input_shape_combine_region(gdkWindow, NULL, 0, 0);
 
@@ -301,11 +259,11 @@ void HudkitWindow::DisableMoveResize()
         int hx, hy, hw, hh;
 
         gtk_window_get_position(gtkWindow, &hx, &hy);
+        gtk_window_move(gtkWindow, hx + decorationSizeLeft, hy + decorationSizeTop);
         gtk_window_get_size(gtkWindow, &hw, &hh);
 
         gdk_window_hide(gdkWindow);
         gtk_window_set_keep_above(gtkWindow, true);
-        gdk_window_set_override_redirect(gdkWindow, true);
         gtk_window_set_decorated(gtkWindow, false);
         gtk_window_set_accept_focus(gtkWindow, false);
         gtk_window_set_resizable(gtkWindow, false);
@@ -315,7 +273,6 @@ void HudkitWindow::DisableMoveResize()
         cairo_region_destroy(region);
         gdk_window_show(gdkWindow);
 
-        movePending = true;
         lockedState = true;
     }
 }

@@ -32,10 +32,6 @@ void DrawArea::SetSize(int width, int height)
         this->texture = malloc(width * height * 4);
         this->width = width;
         this->height = height;
-        if (this->pixbuf != NULL)
-        {
-            //@TODO: Uhh, should probably free pixbuf but no clue how?
-        }
         this->pixbuf = gdk_pixbuf_new_from_data((const guchar*)this->texture, GDK_COLORSPACE_RGB, true, 8, width, height, width*4, NULL, NULL);
     }
 }

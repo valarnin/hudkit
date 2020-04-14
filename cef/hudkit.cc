@@ -27,7 +27,11 @@ void Hudkit::OnContextInitialized()
 
   CefRefPtr<CefCommandLine> command_line = CefCommandLine::GetGlobalCommandLine();
 
-  CefRefPtr<BrowserHandler> handler(new BrowserHandler(false, new HudkitRenderHandler(hudkitWindow.drawArea)));
+  HudkitRenderHandler* renderHandler = new HudkitRenderHandler(hudkitWindow.drawArea);
+
+  hudkitWindow.CEFRenderHandler = renderHandler;
+
+  CefRefPtr<BrowserHandler> handler(new BrowserHandler(false, renderHandler));
 
   CefBrowserSettings browser_settings;
 

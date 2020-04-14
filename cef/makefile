@@ -1,6 +1,6 @@
 hudkit: main.cc
 	@mkdir -p build
-	clang++ -g \
+	clang++ \
 		main.cc \
 		hudkit.cc \
 		browser_handler.cc \
@@ -18,10 +18,13 @@ hudkit: main.cc
 		-lcef_dll_wrapper \
 		-lcef \
 		-std=c++17
-	cp -r cef-project/Release/*.so build/
-	cp -r cef-project/Release/*.bin build/
-	cp -r cef-project/Release/swiftshader build/
-	cp -r cef-project/Resources/* build/
+	cp fetch-required-files.sh build/
+	cd build && ./fetch-required-files.sh
 
 clean:
-	rm -rf build
+	rm build/hudkit
+	rm build/fetch-required-files.sh
+	rm build/release.tar.gz
+
+dist:
+	cd build && tar zcf release.tar.gz hudkit fetch-required-files.sh
