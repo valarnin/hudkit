@@ -24,7 +24,8 @@ HudkitConfig::HudkitConfig(std::string file)
   "y":100,
   "width":200,
   "height":200,
-  "hotkey":"<Ctrl>L"
+  "lockHotkey":"<Ctrl>L",
+  "refreshHotkey":"<Ctrl><Alt>L",
 }
 )";
         outFile << defaultConfig;
@@ -78,8 +79,11 @@ std::string HudkitConfig::GetTitle() {
 std::string HudkitConfig::GetURL() {
     return GetStringValue(jsonDict, "url");
 }
-std::string HudkitConfig::GetHotkey() {
-    return GetStringValue(jsonDict, "hotkey");
+std::string HudkitConfig::GetLockHotkey() {
+    return GetStringValue(jsonDict, "lockHotkey");
+}
+std::string HudkitConfig::GetRefreshHotkey() {
+    return GetStringValue(jsonDict, "refreshHotkey");
 }
 
 void HudkitConfig::SetX(int x) {
@@ -93,15 +97,6 @@ void HudkitConfig::SetWidth(int width) {
 }
 void HudkitConfig::SetHeight(int height) {
     jsonDict->SetInt("height", height);
-}
-void HudkitConfig::SetTitle(std::string title) {
-    jsonDict->SetString("title", title);
-}
-void HudkitConfig::SetURL(std::string url) {
-    jsonDict->SetString("url", url);
-}
-void HudkitConfig::SetHotkey(std::string hotkey) {
-    jsonDict->SetString("hotkey", hotkey);
 }
 
 int HudkitConfig::GetIntValue(CefRefPtr<CefDictionaryValue> &json, const char *key)

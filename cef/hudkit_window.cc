@@ -1,4 +1,5 @@
 #include "hudkit_window.hh"
+#include "browser_handler.hh"
 #include "include/cef_app.h"
 #include <thread>
 #include <gtk/gtk.h>
@@ -58,7 +59,8 @@ void HudkitWindow::Initialize()
                                           cairo_region_create(), 0, 0);
 
     keybinder_init();
-    keybinder_bind(config.GetHotkey().c_str(), &HudkitWindow::__handle_hotkey, this);
+    keybinder_bind(config.GetLockHotkey().c_str(), &HudkitWindow::__handle_lock_hotkey, this);
+    keybinder_bind(config.GetRefreshHotkey().c_str(), &HudkitWindow::__handle_refresh_hotkey, this);
 }
 
 void HudkitWindow::Run()
@@ -113,7 +115,8 @@ void HudkitWindow::Run()
 
 void HudkitWindow::Close()
 {
-    keybinder_unbind(config.GetHotkey().c_str(), &HudkitWindow::__handle_hotkey);
+    keybinder_unbind(config.GetLockHotkey().c_str(), &HudkitWindow::__handle_lock_hotkey);
+    keybinder_unbind(config.GetRefreshHotkey().c_str(), &HudkitWindow::__handle_refresh_hotkey);
 }
 
 void HudkitWindow::DrawWindow()
@@ -158,10 +161,15 @@ void HudkitWindow::__handle_delete_event(GtkWidget *widget, GdkEvent *event, gpo
     instance->destroyed = true;
 }
 
-void HudkitWindow::__handle_hotkey(const char *keystring, void *data)
+void HudkitWindow::__handle_lock_hotkey(const char *keystring, void *data)
 {
     HudkitWindow *instance = (HudkitWindow *)data;
     instance->ToggleMoveResize();
+}
+
+void HudkitWindow::__handle_refresh_hotkey(const char *keystring, void *data)
+{
+    BrowserHandler::GetInstance()->Refresh();
 }
 
 void HudkitWindow::UpdateConfig()

@@ -42,6 +42,8 @@ class BrowserHandler : public CefClient, public CefDisplayHandler, public CefLif
 
   void CloseAllBrowsers(bool force_close);
 
+  void Refresh();
+
   bool IsClosing() const { return is_closing_; }
 
  private:

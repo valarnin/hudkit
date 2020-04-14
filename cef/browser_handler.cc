@@ -121,3 +121,12 @@ void BrowserHandler::CloseAllBrowsers(bool force_close) {
   for (; it != browser_list_.end(); ++it)
     (*it)->GetHost()->CloseBrowser(force_close);
 }
+
+void BrowserHandler::Refresh() {
+  if (browser_list_.empty())
+    return;
+
+  BrowserList::const_iterator it = browser_list_.begin();
+  for (; it != browser_list_.end(); ++it)
+    (*it)->Reload();
+}

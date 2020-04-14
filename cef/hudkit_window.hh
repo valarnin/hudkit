@@ -32,7 +32,8 @@ protected:
     void DrawWindow();
     static void __handle_screen_changed(GtkWidget *widget, GdkScreen *old_screen, gpointer userdata);
     static void __handle_delete_event(GtkWidget *widget, GdkEvent *event, gpointer data);
-    static void __handle_hotkey(const char* keystring, void* data);
+    static void __handle_lock_hotkey(const char* keystring, void* data);
+    static void __handle_refresh_hotkey(const char* keystring, void* data);
     bool destroyed = true, lockedState = false, haveDecorationSizes = false;
     void Resize(), Move();
 };

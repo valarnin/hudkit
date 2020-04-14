@@ -13,10 +13,9 @@ public:
     std::string file;
 
     int GetX(), GetY(), GetWidth(), GetHeight();
-    std::string GetTitle(), GetURL(), GetHotkey();
+    std::string GetTitle(), GetURL(), GetLockHotkey(), GetRefreshHotkey();
 
     void SetX(int x), SetY(int y), SetWidth(int width), SetHeight(int height);
-    void SetTitle(std::string title), SetURL(std::string url), SetHotkey(std::string hotkey);
 
     void WriteConfig();
 
