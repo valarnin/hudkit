@@ -20,7 +20,12 @@ public:
     virtual void OnBeforeCommandLineProcessing(const CefString &process_type, CefRefPtr<CefCommandLine> command_line)
         OVERRIDE
     {
+        //Ignore the audio issues
         command_line->AppendSwitchWithValue("autoplay-policy", "no-user-gesture-required");
+
+        //Allow insecure requests for websocket connection from https source
+        command_line->AppendSwitch("allow-running-insecure-content");
+        command_line->AppendSwitch("disable-web-security");
     }
 
     // CefBrowserProcessHandler methods:
