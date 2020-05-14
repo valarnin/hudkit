@@ -8,12 +8,12 @@ if [[ ! -f "v8_context_snapshot.bin" ]]; then
     mkdir 'cef-project' &> /dev/null
     echo 'Fetching required CEF binaries'
     curl -ocef-project/tmp.tar.bz2 "${CEF_URL}" &> /dev/null
-    cd cef-project
+    pushd cef-project > /dev/null
     echo 'Extracting and moving'
     tar xf tmp.tar.bz2
     mv ${CEF_FOLDER}/Release/* ../
     mv ${CEF_FOLDER}/Resources/* ../
     echo 'Cleaning up'
-    cd ..
+    popd
     rm -rf cef-project
 fi
