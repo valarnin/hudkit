@@ -40,6 +40,10 @@ class BrowserHandler : public CefClient, public CefDisplayHandler, public CefLif
                            const CefString& errorText,
                            const CefString& failedUrl) OVERRIDE;
 
+  virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
+                         CefRefPtr<CefFrame> frame,
+                         int httpStatusCode) OVERRIDE;
+
   void CloseAllBrowsers(bool force_close);
 
   void Refresh();

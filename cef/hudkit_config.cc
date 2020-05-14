@@ -26,6 +26,8 @@ HudkitConfig::HudkitConfig(std::string file)
   "height":200,
   "lockHotkey":"<Ctrl>L",
   "refreshHotkey":"<Ctrl><Alt>L",
+  "injectJS":"",
+  "injectCSS":"",
 }
 )";
         outFile << defaultConfig;
@@ -84,6 +86,12 @@ std::string HudkitConfig::GetLockHotkey() {
 }
 std::string HudkitConfig::GetRefreshHotkey() {
     return GetStringValue(jsonDict, "refreshHotkey");
+}
+std::string HudkitConfig::GetInjectJS() {
+    return GetStringValue(jsonDict, "injectJS");
+}
+std::string HudkitConfig::GetInjectCSS() {
+    return GetStringValue(jsonDict, "injectCSS");
 }
 
 void HudkitConfig::SetX(int x) {

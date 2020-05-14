@@ -2,8 +2,11 @@
 #define __MAIN_HH_
 
 #include "hudkit_window.hh"
+#include "hudkit_instance.hh"
 #include "include/cef_base.h"
 #include "include/cef_app.h"
+
+#include <list>
 
 class Hudkit : public CefApp, public CefBrowserProcessHandler
 {
@@ -32,9 +35,15 @@ public:
     virtual void OnContextInitialized() OVERRIDE;
     void Run();
 
+    HudkitInstance* GetInstance(CefRefPtr<CefBrowser> browser);
+
+    static Hudkit *instance;
+
 private:
     HudkitConfig &config;
     HudkitWindow hudkitWindow;
+
+    std::list<HudkitInstance*> instances;
 
     // Include the default reference counting implementation.
     IMPLEMENT_REFCOUNTING(Hudkit);

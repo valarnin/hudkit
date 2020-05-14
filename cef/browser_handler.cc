@@ -1,10 +1,13 @@
 #include "browser_handler.hh"
+#include "hudkit_instance.hh"
+#include "hudkit.hh"
 
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 
 #include <sstream>
 #include <string>
+#include <regex>
 
 #include "include/base/cef_bind.h"
 #include "include/cef_app.h"
@@ -16,48 +19,56 @@
 #include "include/base/cef_logging.h"
 #include "include/cef_browser.h"
 
-namespace {
+namespace
+{
 
-BrowserHandler* g_instance = nullptr;
+BrowserHandler *g_instance = nullptr;
 
 // Returns a data: URI with the specified contents.
-std::string GetDataURI(const std::string& data, const std::string& mime_type) {
+std::string GetDataURI(const std::string &data, const std::string &mime_type)
+{
   return "data:" + mime_type + ";base64," +
          CefURIEncode(CefBase64Encode(data.data(), data.size()), false)
              .ToString();
 }
 
-}  // namespace
+} // namespace
 
 BrowserHandler::BrowserHandler(bool use_views, CefRefPtr<CefRenderHandler> renderHandler)
-    : use_views_(use_views), is_closing_(false), m_renderHandler(renderHandler) {
+    : use_views_(use_views), is_closing_(false), m_renderHandler(renderHandler)
+{
   DCHECK(!g_instance);
   g_instance = this;
 }
 
-BrowserHandler::~BrowserHandler() {
+BrowserHandler::~BrowserHandler()
+{
   g_instance = nullptr;
 }
 
 // static
-BrowserHandler* BrowserHandler::GetInstance() {
+BrowserHandler *BrowserHandler::GetInstance()
+{
   return g_instance;
 }
 
-void BrowserHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
+void BrowserHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser)
+{
   CEF_REQUIRE_UI_THREAD();
 
   // Add to the list of existing browsers.
   browser_list_.push_back(browser);
 }
 
-bool BrowserHandler::DoClose(CefRefPtr<CefBrowser> browser) {
+bool BrowserHandler::DoClose(CefRefPtr<CefBrowser> browser)
+{
   CEF_REQUIRE_UI_THREAD();
 
   // Closing the main window requires special handling. See the DoClose()
   // documentation in the CEF header for a detailed destription of this
   // process.
-  if (browser_list_.size() == 1) {
+  if (browser_list_.size() == 1)
+  {
     // Set a flag to indicate that the window close should be allowed.
     is_closing_ = true;
   }
@@ -67,29 +78,34 @@ bool BrowserHandler::DoClose(CefRefPtr<CefBrowser> browser) {
   return false;
 }
 
-void BrowserHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
+void BrowserHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser)
+{
   CEF_REQUIRE_UI_THREAD();
 
   // Remove from the list of existing browsers.
   BrowserList::iterator bit = browser_list_.begin();
-  for (; bit != browser_list_.end(); ++bit) {
-    if ((*bit)->IsSame(browser)) {
+  for (; bit != browser_list_.end(); ++bit)
+  {
+    if ((*bit)->IsSame(browser))
+    {
       browser_list_.erase(bit);
       break;
     }
   }
 
-  if (browser_list_.empty()) {
+  if (browser_list_.empty())
+  {
     // All browser windows have closed. Quit the application message loop.
     CefQuitMessageLoop();
   }
 }
 
 void BrowserHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
-                                CefRefPtr<CefFrame> frame,
-                                ErrorCode errorCode,
-                                const CefString& errorText,
-                                const CefString& failedUrl) {
+                                 CefRefPtr<CefFrame> frame,
+                                 ErrorCode errorCode,
+                                 const CefString &errorText,
+                                 const CefString &failedUrl)
+{
   CEF_REQUIRE_UI_THREAD();
 
   // Don't display an error for downloaded files.
@@ -106,8 +122,40 @@ void BrowserHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
   frame->LoadURL(GetDataURI(ss.str(), "text/html"));
 }
 
-void BrowserHandler::CloseAllBrowsers(bool force_close) {
-  if (!CefCurrentlyOn(TID_UI)) {
+void BrowserHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser,
+                               CefRefPtr<CefFrame> frame,
+                               int httpStatusCode)
+{
+  HudkitInstance *instance = Hudkit::instance->GetInstance(browser);
+  std::string js = instance->config.GetInjectJS();
+  std::string css = instance->config.GetInjectCSS();
+
+  if (js.length() > 0)
+  {
+    frame->ExecuteJavaScript(js, "", 0);
+  }
+
+  if (css.length() > 0)
+  {
+    std::string cssJs = R"(
+(() => {
+  let el = document.createElement('style');
+  el.type = "text/css";
+  el.innerHTML = `
+)";
+  cssJs.append(std::regex_replace(css, std::regex("`"), "\\`"));
+  cssJs.append(R"(`;
+  document.querySelector('head').append(el);
+})();
+)");
+    frame->ExecuteJavaScript(cssJs, "", 0);
+  }
+}
+
+void BrowserHandler::CloseAllBrowsers(bool force_close)
+{
+  if (!CefCurrentlyOn(TID_UI))
+  {
     // Execute on the UI thread.
     CefPostTask(TID_UI, base::Bind(&BrowserHandler::CloseAllBrowsers, this,
                                    force_close));
@@ -122,7 +170,8 @@ void BrowserHandler::CloseAllBrowsers(bool force_close) {
     (*it)->GetHost()->CloseBrowser(force_close);
 }
 
-void BrowserHandler::Refresh() {
+void BrowserHandler::Refresh()
+{
   if (browser_list_.empty())
     return;
 

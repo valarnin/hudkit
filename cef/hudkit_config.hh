@@ -14,6 +14,7 @@ public:
 
     int GetX(), GetY(), GetWidth(), GetHeight();
     std::string GetTitle(), GetURL(), GetLockHotkey(), GetRefreshHotkey();
+    std::string GetInjectJS(), GetInjectCSS();
 
     void SetX(int x), SetY(int y), SetWidth(int width), SetHeight(int height);
 

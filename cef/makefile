@@ -8,13 +8,14 @@ hudkit: main.cc
 		render_handler.cc \
 		draw.cc \
 		hudkit_config.cc \
+		hudkit_instance.cc \
 		-o build/hudkit \
 		-isystem ./cef-project \
 		-Wl,-rpath,. \
 		-I./cef-project \
 		-L./cef-project/build/libcef_dll_wrapper \
 		-L./cef-project/Release \
-		`pkg-config --cflags --libs json-c keybinder-3.0 x11 gtk+-3.0` \
+		`pkg-config --cflags --libs keybinder-3.0 x11 gtk+-3.0` \
 		-lcef_dll_wrapper \
 		-lcef \
 		-std=c++17
