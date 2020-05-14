@@ -3,8 +3,9 @@
 CEF_BUILD='cef_binary_81.2.15+ge07275d+chromium-81.0.4044.92_linux64'
 
 if [[ ! -e 'cef-project/build' ]]; then
+    CEF_BUILD_ESCAPED="$(echo "$CEF_BUILD" | sed -e 's/+/%2B/g')"
     mkdir 'cef-project' &> /dev/null
-    curl -ocef-project/tmp.tar.bz2 "http://opensource.spotify.com/cefbuilds/${CEF_BUILD}.tar.bz2" &> /dev/null
+    curl -ocef-project/tmp.tar.bz2 "http://opensource.spotify.com/cefbuilds/${CEF_BUILD_ESCAPED}.tar.bz2" &> /dev/null
     cd cef-project
     tar xf tmp.tar.bz2
     mv "${CEF_BUILD}/*" ./
