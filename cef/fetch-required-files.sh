@@ -14,6 +14,6 @@ if [[ ! -f "v8_context_snapshot.bin" ]]; then
     mv ${CEF_FOLDER}/Release/* ../
     mv ${CEF_FOLDER}/Resources/* ../
     echo 'Cleaning up'
-    popd
+    popd > /dev/null
     rm -rf cef-project
 fi
