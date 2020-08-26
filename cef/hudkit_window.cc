@@ -52,6 +52,7 @@ void HudkitWindow::Initialize()
         gtk_window_set_accept_focus(gtkWindow, false);
         gtk_window_set_decorated(gtkWindow, false);
         gtk_window_set_resizable(gtkWindow, false);
+        lockedState = true;
     }
 
     // Disallow user inputs from interacting with the window
@@ -251,6 +252,7 @@ void HudkitWindow::EnableMoveResize()
     {
         gdk_window_hide(gdkWindow);
         gtk_window_set_keep_above(gtkWindow, true);
+        gdk_window_set_override_redirect(gdkWindow, false);
         gtk_window_set_decorated(gtkWindow, true);
         gtk_window_set_accept_focus(gtkWindow, true);
         gtk_window_set_resizable(gtkWindow, true);
@@ -274,6 +276,7 @@ void HudkitWindow::DisableMoveResize()
 
         gdk_window_hide(gdkWindow);
         gtk_window_set_keep_above(gtkWindow, true);
+        gdk_window_set_override_redirect(gdkWindow, true);
         gtk_window_set_decorated(gtkWindow, false);
         gtk_window_set_accept_focus(gtkWindow, false);
         gtk_window_set_resizable(gtkWindow, false);
